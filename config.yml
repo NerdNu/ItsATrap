@@ -5,3 +5,4 @@ debug:
   allow-spawn-eggs: false
 
 trap-chance: 0.33
+creeper-charge-chance: 0.1

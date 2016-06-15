@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.CaveSpider;
 import org.bukkit.entity.Chicken;
+import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Guardian;
@@ -190,6 +191,35 @@ enum TrapReplacement {
                 }
             }
         }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
+     * This replacement type spawns a mix of charged and uncharged creepers.
+     */
+    CREEPER_TRAP(4) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn a creeper at " + Util.formatLocation(_location));
+            } else {
+                boolean charged = (Math.random() < ItsATrap.CONFIG.CREEPER_CHARGE_CHANCE);
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning a " + (charged ? "charged" : "") + "creeper at " + Util.formatLocation(_location));
+                }
+
+                Creeper creeper = _location.getWorld().spawn(_location, Creeper.class);
+                // Work around https://hub.spigotmc.org/jira/browse/SPIGOT-2335
+                if (charged) {
+                    creeper.setPowered(true);
+                }
+
+                Player player = findNearestPlayer();
+                if (player != null) {
+                    creeper.setTarget(player);
+                }
+            }
+        }
     };
 
     // ------------------------------------------------------------------------
@@ -232,18 +262,18 @@ enum TrapReplacement {
      */
     protected void onJockeySpawn(CreatureSpawnEvent event) {
         if (_firstJockey) {
-            Horse trapHorse = ItsATrap.findTriggerHorse(_location);
-            if (trapHorse == null) {
-                ItsATrap.PLUGIN.getLogger().warning("Trap horse could not be found at " + Util.formatLocation(_location));
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would remove original trap horse at " + Util.formatLocation(_location));
             } else {
-                if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
-                    ItsATrap.PLUGIN.getLogger().info("Dry run: would remove original trap horse at " + Util.formatLocation(_location));
+                Horse trapHorse = ItsATrap.findTriggerHorse(_location);
+                if (trapHorse == null) {
+                    ItsATrap.PLUGIN.getLogger().warning("Trap horse could not be found at " + Util.formatLocation(_location));
                 } else {
                     trapHorse.remove();
-                    for (int i = 0; i < _spawnCount; ++i) {
-                        spawnCustomMobs();
-                        strikeLightning();
-                    }
+                }
+                for (int i = 0; i < _spawnCount; ++i) {
+                    spawnCustomMobs();
+                    strikeLightning();
                 }
             }
             _firstJockey = false;
@@ -260,7 +290,7 @@ enum TrapReplacement {
     /**
      * Spawn the custom mount and rider at the trap location.
      *
-     * This method is overidden by each TrapReplacement implementation to spawn
+     * This method is overridden by each TrapReplacement implementation to spawn
      * the custom mobs.
      */
     protected abstract void spawnCustomMobs();

@@ -129,8 +129,17 @@ public class ItsATrap extends JavaPlugin implements Listener {
 
         } else if (event.getEntityType() == EntityType.HORSE) {
             if (event.getSpawnReason() == SpawnReason.LIGHTNING) {
-                if (_random.nextDouble() > CONFIG.TRAP_CHANCE) {
+                if (_random.nextDouble() < CONFIG.TRAP_CHANCE) {
+                    if (CONFIG.DEBUG_SPAWNS) {
+                        getLogger().info("Trap trigger horse spawned at " +
+                                         Util.formatLocation(event.getEntity().getLocation()));
+                    }
+                } else {
                     event.setCancelled(true);
+                    if (CONFIG.DEBUG_SPAWNS) {
+                        getLogger().info("Cancelling trigger horse spawn at " +
+                                         Util.formatLocation(event.getEntity().getLocation()));
+                    }
                 }
             } else if (event.getSpawnReason() == SpawnReason.TRAP || isTestEgg) {
                 // We assume that a jockey will always spawn first when the trap
