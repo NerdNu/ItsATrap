@@ -1,0 +1,19 @@
+name: ${project.name}
+version: ${project.version}
+author: totemo
+authors: [totemo]
+description: ${project.description}
+website: ${project.url}
+main: nu.nerd.itsatrap.ItsATrap
+
+permissions:
+  itsatrap.admin:
+    description: Permission to administer the plugin.
+    default: op
+
+commands:
+  itsatrap:
+    description: ${project.name} administrative command.
+    permission: itsatrap.admin
+    usage: |
+      /<command> reload: Reload the configuration.
