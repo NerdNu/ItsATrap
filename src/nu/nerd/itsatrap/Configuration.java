@@ -60,6 +60,7 @@ public class Configuration {
             ItsATrap.PLUGIN.getLogger().info("DEBUG_SPAWNS: " + DEBUG_SPAWNS);
             ItsATrap.PLUGIN.getLogger().info("DEBUG_ALLOW_SPAWN_EGGS: " + DEBUG_ALLOW_SPAWN_EGGS);
             ItsATrap.PLUGIN.getLogger().info("TRAP_CHANCE: " + TRAP_CHANCE);
+            ItsATrap.PLUGIN.getLogger().info("CREEPER_CHARGE_CHANCE: " + CREEPER_CHARGE_CHANCE);
         }
     } // reload
 } // class Configuration

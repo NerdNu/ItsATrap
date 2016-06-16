@@ -4,7 +4,7 @@
 	<groupId>nu.nerd</groupId>
 	<name>ItsATrap</name>
 	<artifactId>${project.name}</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<packaging>jar</packaging>
 	<description>Custom handling of skeleton traps.</description>
 	<url>https://github.com/NerdNu/${project.name}</url>
