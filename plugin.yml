@@ -16,4 +16,10 @@ commands:
     description: ${project.name} administrative command.
     permission: itsatrap.admin
     usage: |
-      /<command> reload: Reload the configuration.
+
+      §e/<command> help §f- Show usage help.
+      §e/<command> reload §f- Reload the configuration.
+      §e/<command> types §f- List all possible trap replacement types.
+      §e/<command> type §f[§e<type>§f] - Force all traps to be of the
+        specified type until the next restart (for testing purposes).
+        If the type is omitted, normal random type selection resumes.

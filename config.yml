@@ -2,6 +2,7 @@ debug:
   config: true
   dry-run: false
   spawns: true
+  vanilla-spawns: false
   allow-spawn-eggs: false
 
 trap-chance: 0.33

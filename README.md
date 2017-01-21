@@ -25,6 +25,19 @@ Features
        chickens - a "Chicken Trap".
      * The trap mobs are replaced by four creepers, each with a small, configurable
        chance of being charged - a "Creeper Trap".
+     * The trap mobs are replaced by three vindicators.
+     * The trap mobs are replaced by one evoker.
+
+
+Commands
+--------
+
+ * `/itsatrap help` - Show usage help.
+ * `/itsatrap reload` - Reload the configuration.
+ * `/itsatrap types` - List all possible trap replacement types.
+ * `/itsatrap type [<type>]` - Force all traps to be of the specified
+   type until the next restart (for testing purposes). If the
+   type is omitted, normal random type selection resumes.
 
 
 Configuration
@@ -34,23 +47,15 @@ Configuration
 | :--- | :--- |
 | `debug.config` | If true, loaded configuration settings are logged. |
 | `debug.dry-run` | If true, the plugin logs what it would do about traps, rather than performing the actions. |
-| `debug.spawns` | If true, spawned mobs are logged. |
-| `debug.allow-spawn-eggs` | If true, skeleton and horse spawn eggs are treated as equivalent to JOCKEY and TRAP spawns, respectively and can then be used to test some aspects of the plugin's behavior. |
+| `debug.spawns` | If true, log spawns of the trigger horse and trap replacements. |
+| `debug.vanilla-spawns` | If true, log spawns of the trigger horse jockey and the reinforcement skeleton horses. This setting gives more insight into the vanilla trap behaviour than the debug.spawns setting. |
+| `debug.allow-spawn-eggs` | If true, skeleton spawn eggs spawn a randomly selected trap replacement, or the specific replacement specified by the `/itsatrap type <type>` command. |
 | `trap-chance` | The probability, in the range [0.0,1.0], that a vanilla skeleton trap will be allowed to spawn in the world. A value of 0.0 denies all trap spawns, whereas 1.0 allows all traps to spawn, and they are then eligible for replacement with custom mobs. |
 | `creeper-charge-chance` | The probability, in the range [0.0,1.0] that a creeper in a Creeper Trap will be charged. |
-
-Testing ItsATrap is difficult because trap horse spawns are only common with a
-lot of players online.  You basically need to test on a live server.
-
-
-Commands
---------
-
- * `/itsatrap reload` - Reload the configuration.
 
 
 Permissions
 -----------
 
- * `itsatrap.admin` - Permission to run `/itsatrap reload`.
+ * `itsatrap.admin` - Permission to run `/itsatrap` and its subcommands.
 

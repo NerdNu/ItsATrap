@@ -1,16 +1,19 @@
 package nu.nerd.itsatrap;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Horse.Variant;
+import org.bukkit.entity.SkeletonHorse;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
@@ -20,16 +23,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 // ----------------------------------------------------------------------------
 /**
  * Customised trap horse handling.
- *
- * Possible traps:
- * <ul>
- * <li>In ocean and deep ocean biomes, spawn witches riding guardians. The
- * original trap horse is replaced with an elder guardian, ridden by a witch.</li>
- * <li>Witches on cave spiders.</li>
- * <li>Stone sword wielding zombies on zombie horses.</li>
- * <li>Blazes riding ghasts.</li>
- * <li>Baby zombies with stone swords riding chickens.</li>
- * </ul>
+ * 
+ * See {@link TrapReplacement} for possible trap replacements.
  */
 public class ItsATrap extends JavaPlugin implements Listener {
     /**
@@ -62,17 +57,43 @@ public class ItsATrap extends JavaPlugin implements Listener {
      *      org.bukkit.command.Command, java.lang.String, java.lang.String[])
      */
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command command, String alias, String[] args) {
         if (command.getName().equalsIgnoreCase(getName())) {
-            if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-                CONFIG.reload();
-                sender.sendMessage(ChatColor.GOLD + getName() + " configuration reloaded.");
+            if (args.length == 1) {
+                if (args[0].equalsIgnoreCase("help")) {
+                    return false;
+                } else if (args[0].equalsIgnoreCase("reload")) {
+                    CONFIG.reload();
+                    sender.sendMessage(ChatColor.GOLD + getName() + " configuration reloaded.");
+                    return true;
+                } else if (args[0].equalsIgnoreCase("types")) {
+                    List<String> types = Arrays.asList(TrapReplacement.VALUES).stream()
+                    .map(v -> v.toString()).collect(Collectors.toList());
+                    sender.sendMessage(ChatColor.GOLD + "Trap replacement types: " +
+                                       ChatColor.GRAY + String.join(" ", types));
+                    return true;
+                } else if (args[0].equalsIgnoreCase("type")) {
+                    _forcedReplacement = null;
+                    sender.sendMessage(ChatColor.GOLD + "The trap replacement type will be randomly selected from now on.");
+                    return true;
+                }
+            } else if (args.length == 2 && args[0].equalsIgnoreCase("type")) {
+                String typeName = args[1].toUpperCase();
+                try {
+                    _forcedReplacement = TrapReplacement.valueOf(typeName);
+                    sender.sendMessage(ChatColor.GOLD + "The trap replacement type will be " +
+                                       _forcedReplacement.toString() + " until the next restart.");
+                } catch (IllegalArgumentException ex) {
+                    sender.sendMessage(ChatColor.RED + typeName + " is not a valid trap replacement type.");
+                }
                 return true;
             }
         }
 
-        sender.sendMessage(ChatColor.RED + "Invalid command syntax.");
+        sender.sendMessage(ChatColor.RED + "Invalid command syntax. Use \"/" +
+                           alias + " help\" for help.");
         return true;
+
     }
 
     // ------------------------------------------------------------------------
@@ -120,14 +141,22 @@ public class ItsATrap extends JavaPlugin implements Listener {
             if (mount == null) {
                 mount = findTriggerHorse(loc);
             }
-            if (isTestEgg || mount instanceof Horse) {
+
+            if (CONFIG.DEBUG_VANILLA_SPAWNS) {
+                if (mount != null) {
+                    getLogger().info("Skeleton jockey spawned at " +
+                                     Util.formatLocation(event.getEntity().getLocation()));
+                }
+            }
+
+            if (isTestEgg || mount instanceof SkeletonHorse) {
                 if (isNewTrapLocation(loc)) {
                     _replacement = chooseReplacement(loc);
                 }
                 _replacement.onJockeySpawn(event);
             }
 
-        } else if (event.getEntityType() == EntityType.HORSE) {
+        } else if (event.getEntityType() == EntityType.SKELETON_HORSE) {
             if (event.getSpawnReason() == SpawnReason.LIGHTNING) {
                 if (_random.nextDouble() < CONFIG.TRAP_CHANCE) {
                     if (CONFIG.DEBUG_SPAWNS) {
@@ -142,6 +171,11 @@ public class ItsATrap extends JavaPlugin implements Listener {
                     }
                 }
             } else if (event.getSpawnReason() == SpawnReason.TRAP || isTestEgg) {
+                if (CONFIG.DEBUG_VANILLA_SPAWNS) {
+                    getLogger().info("Trap horse spawned at " +
+                                     Util.formatLocation(event.getEntity().getLocation()));
+
+                }
                 // We assume that a jockey will always spawn first when the trap
                 // is sprung and we don't need to check the trap location here.
                 if (_replacement != null) {
@@ -171,19 +205,28 @@ public class ItsATrap extends JavaPlugin implements Listener {
      * Randomly select a new {@link TrapReplacement} appropriate to the
      * specified location and update the stored current trap location.
      *
+     * If a specific type has been selected with /itsatrap type <type>, then
+     * that type will always be returned, until the next restart.
+     *
      * @param loc the new trap location.
      * @return a new {@link TrapReplacement}.
      */
     protected TrapReplacement chooseReplacement(Location loc) {
         _location = loc;
-        Biome biome = loc.getBlock().getBiome();
-        if (biome == Biome.OCEAN || biome == Biome.DEEP_OCEAN) {
-            _replacement = TrapReplacement.GUARDIAN_TRAP;
+
+        TrapReplacement replacement;
+        if (_forcedReplacement != null) {
+            replacement = _forcedReplacement;
         } else {
-            _replacement = TrapReplacement.VALUES[1 + _random.nextInt(TrapReplacement.VALUES.length - 1)];
+            Biome biome = loc.getBlock().getBiome();
+            if (biome == Biome.OCEAN || biome == Biome.DEEP_OCEAN) {
+                replacement = TrapReplacement.GUARDIAN;
+            } else {
+                replacement = TrapReplacement.VALUES[1 + _random.nextInt(TrapReplacement.VALUES.length - 1)];
+            }
         }
-        _replacement.trapChanged(_location);
-        return _replacement;
+        replacement.trapChanged(_location);
+        return replacement;
     }
 
     // ------------------------------------------------------------------------
@@ -193,10 +236,10 @@ public class ItsATrap extends JavaPlugin implements Listener {
      * @param loc the location.
      * @return the trigger horse, or null if not found.
      */
-    protected static Horse findTriggerHorse(Location loc) {
+    protected static AbstractHorse findTriggerHorse(Location loc) {
         for (Entity entity : loc.getWorld().getNearbyEntities(loc, 0.5, 0.5, 0.5)) {
-            if (entity instanceof Horse && ((Horse) entity).getVariant() == Variant.SKELETON_HORSE) {
-                return (Horse) entity;
+            if (entity.getType() == EntityType.SKELETON_HORSE) {
+                return (SkeletonHorse) entity;
             }
         }
         return null;
@@ -216,6 +259,11 @@ public class ItsATrap extends JavaPlugin implements Listener {
      * Currently active replacement method;
      */
     protected TrapReplacement _replacement;
+
+    /**
+     * If not null, all trap replacements will be of this type.
+     */
+    protected TrapReplacement _forcedReplacement;
 
     /**
      * Location of the most recent trap jockey spawn.

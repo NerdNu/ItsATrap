@@ -16,9 +16,18 @@ public class Configuration {
     public boolean DEBUG_DRY_RUN;
 
     /**
-     * If true, log mob spawns.
+     * If true, log spawns of the trigger horse and trap replacements.
      */
     public boolean DEBUG_SPAWNS;
+
+    /**
+     * If true, log spawns of the trigger horse jockey and the reinforcement
+     * skeleton horses.
+     *
+     * This setting gives more insight into the vanilla trap behaviour than the
+     * DEBUG_SPAWNS setting.
+     */
+    public boolean DEBUG_VANILLA_SPAWNS;
 
     /**
      * If true, spawn eggs can be used to simulate trap-related events.
@@ -50,6 +59,7 @@ public class Configuration {
         DEBUG_CONFIG = ItsATrap.PLUGIN.getConfig().getBoolean("debug.config");
         DEBUG_DRY_RUN = ItsATrap.PLUGIN.getConfig().getBoolean("debug.dry-run");
         DEBUG_SPAWNS = ItsATrap.PLUGIN.getConfig().getBoolean("debug.spawns");
+        DEBUG_VANILLA_SPAWNS = ItsATrap.PLUGIN.getConfig().getBoolean("debug.vanilla-spawns");
         DEBUG_ALLOW_SPAWN_EGGS = ItsATrap.PLUGIN.getConfig().getBoolean("debug.allow-spawn-eggs");
         TRAP_CHANCE = ItsATrap.PLUGIN.getConfig().getDouble("trap-chance");
         CREEPER_CHARGE_CHANCE = ItsATrap.PLUGIN.getConfig().getDouble("creeper-charge-chance");
@@ -58,6 +68,7 @@ public class Configuration {
             ItsATrap.PLUGIN.getLogger().info("Configuration: ");
             ItsATrap.PLUGIN.getLogger().info("DEBUG_DRY_RUN: " + DEBUG_DRY_RUN);
             ItsATrap.PLUGIN.getLogger().info("DEBUG_SPAWNS: " + DEBUG_SPAWNS);
+            ItsATrap.PLUGIN.getLogger().info("DEBUG_VANILLA_SPAWNS: " + DEBUG_VANILLA_SPAWNS);
             ItsATrap.PLUGIN.getLogger().info("DEBUG_ALLOW_SPAWN_EGGS: " + DEBUG_ALLOW_SPAWN_EGGS);
             ItsATrap.PLUGIN.getLogger().info("TRAP_CHANCE: " + TRAP_CHANCE);
             ItsATrap.PLUGIN.getLogger().info("CREEPER_CHARGE_CHANCE: " + CREEPER_CHARGE_CHANCE);

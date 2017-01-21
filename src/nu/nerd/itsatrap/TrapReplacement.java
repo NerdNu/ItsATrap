@@ -2,18 +2,20 @@ package nu.nerd.itsatrap;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.CaveSpider;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Evoker;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Guardian;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Horse.Variant;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Vindicator;
 import org.bukkit.entity.Witch;
 import org.bukkit.entity.Zombie;
+import org.bukkit.entity.ZombieHorse;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -26,8 +28,11 @@ enum TrapReplacement {
      * This replacement type replaces the trap with witches riding guardians.
      *
      * It is only applicable in ocean and deep ocean biomes.
+     *
+     * This enum must appear first, as the random TrapReplacement selection code
+     * skips over this element for non-ocean biomes.
      */
-    GUARDIAN_TRAP(3) {
+    GUARDIAN(3) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -39,7 +44,7 @@ enum TrapReplacement {
 
                 Witch rider = _location.getWorld().spawn(_location, Witch.class);
                 Guardian mount = _location.getWorld().spawn(_location, Guardian.class);
-                mount.setPassenger(rider);
+                mount.addPassenger(rider);
 
                 Player player = findNearestPlayer();
                 if (player != null) {
@@ -54,7 +59,7 @@ enum TrapReplacement {
     /**
      * This replacement type retains Mojang's vanilla skeleton trap, unchanged.
      */
-    SKELETON_TRAP(4) {
+    SKELETON(4) {
         @Override
         protected void onTrapHorseSpawn(CreatureSpawnEvent event) {
             if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
@@ -84,7 +89,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns witches riding cave spiders.
      */
-    POISON_TRAP(3) {
+    POISON(3) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -96,7 +101,7 @@ enum TrapReplacement {
 
                 Witch rider = _location.getWorld().spawn(_location, Witch.class);
                 CaveSpider mount = _location.getWorld().spawn(_location, CaveSpider.class);
-                mount.setPassenger(rider);
+                mount.addPassenger(rider);
 
                 Player player = findNearestPlayer();
                 if (player != null) {
@@ -111,7 +116,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns zombies riding zombie horses.
      */
-    ZOMBIE_TRAP(4) {
+    ZOMBIE(4) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -122,11 +127,10 @@ enum TrapReplacement {
                 }
 
                 Zombie rider = _location.getWorld().spawn(_location, Zombie.class);
-                Horse mount = _location.getWorld().spawn(_location, Horse.class);
-                mount.setVariant(Variant.UNDEAD_HORSE);
+                ZombieHorse mount = _location.getWorld().spawn(_location, ZombieHorse.class);
                 mount.setAdult();
                 mount.setTamed(true);
-                mount.setPassenger(rider);
+                mount.addPassenger(rider);
                 rider.getEquipment().setHelmet(new ItemStack(Material.PUMPKIN));
                 rider.getEquipment().setItemInMainHand(new ItemStack(Material.STONE_SWORD));
 
@@ -142,7 +146,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns blazes riding ghasts.
      */
-    GHAST_TRAP(4) {
+    GHAST(4) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -154,7 +158,7 @@ enum TrapReplacement {
 
                 Blaze rider = _location.getWorld().spawn(_location, Blaze.class);
                 Ghast mount = _location.getWorld().spawn(_location, Ghast.class);
-                mount.setPassenger(rider);
+                mount.addPassenger(rider);
 
                 Player player = findNearestPlayer();
                 if (player != null) {
@@ -169,7 +173,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns baby zombies riding chickens.
      */
-    CHICKEN_TRAP(4) {
+    CHICKEN(4) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -181,7 +185,7 @@ enum TrapReplacement {
 
                 Zombie rider = _location.getWorld().spawn(_location, Zombie.class);
                 Chicken mount = _location.getWorld().spawn(_location, Chicken.class);
-                mount.setPassenger(rider);
+                mount.addPassenger(rider);
                 rider.setBaby(true);
                 rider.getEquipment().setItemInMainHand(new ItemStack(Material.STONE_SWORD));
 
@@ -197,7 +201,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns a mix of charged and uncharged creepers.
      */
-    CREEPER_TRAP(4) {
+    CREEPER(4) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -217,6 +221,52 @@ enum TrapReplacement {
                 Player player = findNearestPlayer();
                 if (player != null) {
                     creeper.setTarget(player);
+                }
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
+     * This replacement type spawns three vindicators.
+     */
+    VINDICATOR(3) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn a vindicator at " + Util.formatLocation(_location));
+            } else {
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning a vindicator at " + Util.formatLocation(_location));
+                }
+
+                Vindicator mob = _location.getWorld().spawn(_location, Vindicator.class);
+                Player player = findNearestPlayer();
+                if (player != null) {
+                    mob.setTarget(player);
+                }
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
+     * This replacement type spawns one evoker.
+     */
+    EVOKER(1) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn an evoker at " + Util.formatLocation(_location));
+            } else {
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning an evoker at " + Util.formatLocation(_location));
+                }
+
+                Evoker mob = _location.getWorld().spawn(_location, Evoker.class);
+                Player player = findNearestPlayer();
+                if (player != null) {
+                    mob.setTarget(player);
                 }
             }
         }
@@ -265,7 +315,7 @@ enum TrapReplacement {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
                 ItsATrap.PLUGIN.getLogger().info("Dry run: would remove original trap horse at " + Util.formatLocation(_location));
             } else {
-                Horse trapHorse = ItsATrap.findTriggerHorse(_location);
+                AbstractHorse trapHorse = ItsATrap.findTriggerHorse(_location);
                 if (trapHorse == null) {
                     ItsATrap.PLUGIN.getLogger().warning("Trap horse could not be found at " + Util.formatLocation(_location));
                 } else {
