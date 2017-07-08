@@ -11,6 +11,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Evoker;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Guardian;
+import org.bukkit.entity.Illusioner;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vindicator;
 import org.bukkit.entity.Witch;
@@ -264,6 +265,29 @@ enum TrapReplacement {
                 }
 
                 Evoker mob = _location.getWorld().spawn(_location, Evoker.class);
+                Player player = findNearestPlayer();
+                if (player != null) {
+                    mob.setTarget(player);
+                }
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
+     * This replacement type spawns three illusioners.
+     */
+    ILLUSIONER(3) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn an illusioner at " + Util.formatLocation(_location));
+            } else {
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning an illusioner at " + Util.formatLocation(_location));
+                }
+
+                Illusioner mob = _location.getWorld().spawn(_location, Illusioner.class);
                 Player player = findNearestPlayer();
                 if (player != null) {
                     mob.setTarget(player);
