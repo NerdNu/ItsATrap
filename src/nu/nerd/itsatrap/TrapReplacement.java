@@ -2,17 +2,21 @@ package nu.nerd.itsatrap;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.CaveSpider;
 import org.bukkit.entity.Chicken;
+import org.bukkit.entity.Creature;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Evoker;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Guardian;
 import org.bukkit.entity.Illusioner;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Shulker;
 import org.bukkit.entity.Vindicator;
 import org.bukkit.entity.Witch;
 import org.bukkit.entity.Zombie;
@@ -291,6 +295,68 @@ enum TrapReplacement {
                 Player player = findNearestPlayer();
                 if (player != null) {
                     mob.setTarget(player);
+                }
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
+     * This replacement type spawns some bugs.
+     */
+    BUG(10) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn bug at " + Util.formatLocation(_location));
+            } else {
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning bug at " + Util.formatLocation(_location));
+                }
+
+                EntityType entityType = (Math.random() < 0.5 ? EntityType.SILVERFISH : EntityType.ENDERMITE);
+                Creature mob = (Creature) _location.getWorld().spawnEntity(_location, entityType);
+                Player player = findNearestPlayer();
+                if (player != null) {
+                    mob.setTarget(player);
+                }
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
+     * This replacement type spawns shulkers.
+     */
+    SHULKER(3) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn shulker at " + Util.formatLocation(_location));
+            } else {
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning shulker at " + Util.formatLocation(_location));
+                }
+
+                // Try up to 3 times to find a spawning location.
+                Location spawnLoc = null;
+                for (int i = 0; i < 3; ++i) {
+                    int dx = (int) Math.round(Math.random() * 10 - 5);
+                    int dz = (int) Math.round(Math.random() * 10 - 5);
+                    Location loc = _location.clone().add(dx, 0, dz);
+                    Block block = loc.getBlock();
+                    if (block.getType() == Material.AIR) {
+                        spawnLoc = loc;
+                        break;
+                    }
+                }
+
+                if (spawnLoc != null) {
+                    Shulker mob = spawnLoc.getWorld().spawn(spawnLoc, Shulker.class);
+                    Player player = findNearestPlayer();
+                    if (player != null) {
+                        mob.setTarget(player);
+                    }
                 }
             }
         }
