@@ -10,10 +10,13 @@ Features
    the initial triggering skeleton horse.
  * When that trap horse is triggered by the player approaching within 10 blocks
    of it, the trap springs and one of the following actions is taken:
-   * In ocean and deep ocean biomes, the trap mobs are replaced by 3 witches
-     riding guardians - a "Guardian Trap".
+   * In aquatic biomes (ocean and river variants), the trap mobs are replaced 
+     by 3 witches riding guardians - a "Guardian Trap" - or 3 drowned riding
+     dolphins - a "Dolphin Trap".
    * In other biomes, the fate of the trap mobs is selected randomly from the
      following options:
+     * The trap mobs are replaced by three drowned riding zombie horses - a
+       "Trident Trap".
      * The original skeleton trap (four skeletons riding skeletal horses) spawns
        unchanged.
      * The trap mobs are replaced by three witches riding cave spiders - a "Poison
@@ -27,6 +30,10 @@ Features
        chance of being charged - a "Creeper Trap".
      * The trap mobs are replaced by three vindicators.
      * The trap mobs are replaced by one evoker.
+     * The trap mobs are replaced by three illusioners.
+     * The trap mobs are replaced by ten bugs - a mixture of silverfish and
+       endermites.
+     * The trap mobs are replaced by three shulkers.
 
 
 Commands
@@ -52,7 +59,7 @@ Configuration
 | `debug.allow-spawn-eggs` | If true, skeleton spawn eggs spawn a randomly selected trap replacement, or the specific replacement specified by the `/itsatrap type <type>` command. |
 | `trap-chance` | The probability, in the range [0.0,1.0], that a vanilla skeleton trap will be allowed to spawn in the world. A value of 0.0 denies all trap spawns, whereas 1.0 allows all traps to spawn, and they are then eligible for replacement with custom mobs. |
 | `creeper-charge-chance` | The probability, in the range [0.0,1.0] that a creeper in a Creeper Trap will be charged. |
-
+| `trident-drop-chance` | The probability, in the range [0.0,1.0] that a drowned will drop its trident. |
 
 Permissions
 -----------
