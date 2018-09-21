@@ -49,6 +49,11 @@ public class Configuration {
      */
     public double CREEPER_CHARGE_CHANCE;
 
+    /**
+     * The probability, (range [0.0,1.0]) that a drowned will drop its trident.
+     */
+    public float TRIDENT_DROP_CHANCE;
+
     // ------------------------------------------------------------------------
     /**
      * Load the plugin configuration.
@@ -63,6 +68,7 @@ public class Configuration {
         DEBUG_ALLOW_SPAWN_EGGS = ItsATrap.PLUGIN.getConfig().getBoolean("debug.allow-spawn-eggs");
         TRAP_CHANCE = ItsATrap.PLUGIN.getConfig().getDouble("trap-chance");
         CREEPER_CHARGE_CHANCE = ItsATrap.PLUGIN.getConfig().getDouble("creeper-charge-chance");
+        TRIDENT_DROP_CHANCE = (float) ItsATrap.PLUGIN.getConfig().getDouble("trident-drop-chance");
 
         if (DEBUG_CONFIG) {
             ItsATrap.PLUGIN.getLogger().info("Configuration: ");
@@ -72,6 +78,7 @@ public class Configuration {
             ItsATrap.PLUGIN.getLogger().info("DEBUG_ALLOW_SPAWN_EGGS: " + DEBUG_ALLOW_SPAWN_EGGS);
             ItsATrap.PLUGIN.getLogger().info("TRAP_CHANCE: " + TRAP_CHANCE);
             ItsATrap.PLUGIN.getLogger().info("CREEPER_CHARGE_CHANCE: " + CREEPER_CHARGE_CHANCE);
+            ItsATrap.PLUGIN.getLogger().info("TRIDENT_DROP_CHANCE: " + TRIDENT_DROP_CHANCE);
         }
     } // reload
 } // class Configuration

@@ -1,14 +1,17 @@
 package nu.nerd.itsatrap;
 
+import java.util.ArrayList;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.AbstractHorse;
-import org.bukkit.entity.Blaze;
 import org.bukkit.entity.CaveSpider;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Dolphin;
+import org.bukkit.entity.Drowned;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Evoker;
@@ -31,13 +34,8 @@ enum TrapReplacement {
     // ------------------------------------------------------------------------
     /**
      * This replacement type replaces the trap with witches riding guardians.
-     *
-     * It is only applicable in ocean and deep ocean biomes.
-     *
-     * This enum must appear first, as the random TrapReplacement selection code
-     * skips over this element for non-ocean biomes.
      */
-    GUARDIAN(3) {
+    GUARDIAN(3, true) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -62,9 +60,72 @@ enum TrapReplacement {
 
     // ------------------------------------------------------------------------
     /**
+     * This replacement type replaces the trap with drowned riding dolphins.
+     */
+    DOLPHIN(3, true) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn a drowned on a dolphin at " + Util.formatLocation(_location));
+            } else {
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning a drowned on a dolphin at " + Util.formatLocation(_location));
+                }
+
+                Drowned rider = _location.getWorld().spawn(_location, Drowned.class);
+                Dolphin mount = _location.getWorld().spawn(_location, Dolphin.class);
+                mount.addPassenger(rider);
+                rider.getEquipment().setHelmet(new ItemStack(Material.CYAN_STAINED_GLASS));
+                rider.getEquipment().setItemInMainHand(new ItemStack(Material.TRIDENT));
+                rider.getEquipment().setItemInMainHandDropChance(ItsATrap.CONFIG.TRIDENT_DROP_CHANCE);
+
+                Player player = findNearestPlayer();
+                if (player != null) {
+                    rider.setTarget(player);
+                    mount.setTarget(player);
+                }
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
+     * This replacement type replaces the trap with drowned riding zombie
+     * horses.
+     */
+    TRIDENT(3, false) {
+        @Override
+        protected void spawnCustomMobs() {
+            if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn a drowned on a zombie horse at " + Util.formatLocation(_location));
+            } else {
+                if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
+                    ItsATrap.PLUGIN.getLogger().info("Spawning a drowned on a zombie horse at " + Util.formatLocation(_location));
+                }
+
+                Drowned rider = _location.getWorld().spawn(_location, Drowned.class);
+                ZombieHorse mount = _location.getWorld().spawn(_location, ZombieHorse.class);
+                mount.setAdult();
+                mount.setTamed(true);
+                mount.addPassenger(rider);
+                rider.getEquipment().setHelmet(new ItemStack(Material.CYAN_STAINED_GLASS));
+                rider.getEquipment().setItemInMainHand(new ItemStack(Material.TRIDENT));
+                rider.getEquipment().setItemInMainHandDropChance(ItsATrap.CONFIG.TRIDENT_DROP_CHANCE);
+                rider.setCanPickupItems(false);
+
+                Player player = findNearestPlayer();
+                if (player != null) {
+                    rider.setTarget(player);
+                }
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    /**
      * This replacement type retains Mojang's vanilla skeleton trap, unchanged.
      */
-    SKELETON(4) {
+    SKELETON(4, false) {
         @Override
         protected void onTrapHorseSpawn(CreatureSpawnEvent event) {
             if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
@@ -94,7 +155,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns witches riding cave spiders.
      */
-    POISON(3) {
+    POISON(3, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -121,7 +182,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns zombies riding zombie horses.
      */
-    ZOMBIE(4) {
+    ZOMBIE(4, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -136,7 +197,7 @@ enum TrapReplacement {
                 mount.setAdult();
                 mount.setTamed(true);
                 mount.addPassenger(rider);
-                rider.getEquipment().setHelmet(new ItemStack(Material.PUMPKIN));
+                rider.getEquipment().setHelmet(new ItemStack(Material.CARVED_PUMPKIN));
                 rider.getEquipment().setItemInMainHand(new ItemStack(Material.STONE_SWORD));
 
                 Player player = findNearestPlayer();
@@ -149,26 +210,22 @@ enum TrapReplacement {
 
     // ------------------------------------------------------------------------
     /**
-     * This replacement type spawns blazes riding ghasts.
+     * This replacement type spawns ghasts.
      */
-    GHAST(4) {
+    GHAST(4, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
-                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn a blaze riding a ghast at " + Util.formatLocation(_location));
+                ItsATrap.PLUGIN.getLogger().info("Dry run: would spawn a ghast at " + Util.formatLocation(_location));
             } else {
                 if (ItsATrap.CONFIG.DEBUG_SPAWNS) {
-                    ItsATrap.PLUGIN.getLogger().info("Spawning a blaze riding a ghast at " + Util.formatLocation(_location));
+                    ItsATrap.PLUGIN.getLogger().info("Spawning a ghast at " + Util.formatLocation(_location));
                 }
 
-                Blaze rider = _location.getWorld().spawn(_location, Blaze.class);
-                Ghast mount = _location.getWorld().spawn(_location, Ghast.class);
-                mount.addPassenger(rider);
-
+                Ghast ghast = _location.getWorld().spawn(_location, Ghast.class);
                 Player player = findNearestPlayer();
                 if (player != null) {
-                    rider.setTarget(player);
-                    // Undefined for ghast: mount.setTarget(player);
+                    ghast.setTarget(player);
                 }
             }
         }
@@ -178,7 +235,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns baby zombies riding chickens.
      */
-    CHICKEN(4) {
+    CHICKEN(4, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -206,7 +263,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns a mix of charged and uncharged creepers.
      */
-    CREEPER(4) {
+    CREEPER(4, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -235,7 +292,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns three vindicators.
      */
-    VINDICATOR(3) {
+    VINDICATOR(3, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -258,7 +315,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns one evoker.
      */
-    EVOKER(1) {
+    EVOKER(1, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -281,7 +338,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns three illusioners.
      */
-    ILLUSIONER(3) {
+    ILLUSIONER(3, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -304,7 +361,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns some bugs.
      */
-    BUG(10) {
+    BUG(10, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -328,7 +385,7 @@ enum TrapReplacement {
     /**
      * This replacement type spawns shulkers.
      */
-    SHULKER(3) {
+    SHULKER(3, false) {
         @Override
         protected void spawnCustomMobs() {
             if (ItsATrap.CONFIG.DEBUG_DRY_RUN) {
@@ -364,18 +421,48 @@ enum TrapReplacement {
 
     // ------------------------------------------------------------------------
     /**
-     * All values, computed only once.
+     * TrapReplacements that spawn in aquatic biomes.
      */
-    public static TrapReplacement[] VALUES = values();
+    public static ArrayList<TrapReplacement> AQUATIC_REPLACEMENTS = new ArrayList<>();
+
+    /**
+     * TrapReplacements that spawn in dry land biomes.
+     */
+    public static ArrayList<TrapReplacement> LAND_REPLACEMENTS = new ArrayList<>();
+
+    // ------------------------------------------------------------------------
+    // Initialise AQUATIC_REPLACEMENTS and LAND_REPLACEMENTS.
+
+    static {
+        for (TrapReplacement replacement : values()) {
+            if (replacement.isAquatic()) {
+                AQUATIC_REPLACEMENTS.add(replacement);
+            } else {
+                LAND_REPLACEMENTS.add(replacement);
+            }
+        }
+    }
 
     // ------------------------------------------------------------------------
     /**
      * Constructor.
      *
      * @param spawnCount the number of calls to
+     * @param aquatic if true, the replacement only spawns in aquatic biomes.
      */
-    TrapReplacement(int spawnCount) {
+    TrapReplacement(int spawnCount, boolean aquatic) {
         _spawnCount = spawnCount;
+        _aquatic = aquatic;
+    }
+
+    // ------------------------------------------------------------------------
+    /**
+     * Return true if the replacement only spawns in aquatic biomes.
+     * 
+     * @return true if the replacement only spawns in aquatic biomes.
+     */
+    public boolean isAquatic() {
+        return _aquatic;
     }
 
     // ------------------------------------------------------------------------
@@ -500,4 +587,9 @@ enum TrapReplacement {
      * Number of custom spawns to spawn, in total, for this trap type.
      */
     protected int _spawnCount;
+
+    /**
+     * If true, the replacement only spawns in aquatic biomes.
+     */
+    protected boolean _aquatic;
 } // class TrapReplacement

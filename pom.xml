@@ -4,7 +4,7 @@
 	<groupId>nu.nerd</groupId>
 	<name>ItsATrap</name>
 	<artifactId>${project.name}</artifactId>
-	<version>1.3.0</version>
+	<version>1.4.0</version>
 	<packaging>jar</packaging>
 	<description>Custom handling of skeleton traps.</description>
 	<url>https://github.com/NerdNu/${project.name}</url>
@@ -26,7 +26,7 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.12-R0.1-SNAPSHOT</version>
+			<version>1.13-R0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

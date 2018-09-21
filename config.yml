@@ -7,3 +7,4 @@ debug:
 
 trap-chance: 0.33
 creeper-charge-chance: 0.1
+trident-drop-chance: 0.3

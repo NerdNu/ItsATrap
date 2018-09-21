@@ -1,7 +1,7 @@
 package nu.nerd.itsatrap;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -67,10 +67,12 @@ public class ItsATrap extends JavaPlugin implements Listener {
                     sender.sendMessage(ChatColor.GOLD + getName() + " configuration reloaded.");
                     return true;
                 } else if (args[0].equalsIgnoreCase("types")) {
-                    List<String> types = Arrays.asList(TrapReplacement.VALUES).stream()
-                    .map(v -> v.toString()).collect(Collectors.toList());
-                    sender.sendMessage(ChatColor.GOLD + "Trap replacement types: " +
-                                       ChatColor.GRAY + String.join(" ", types));
+                    String aquaticReplacements = TrapReplacement.AQUATIC_REPLACEMENTS.stream()
+                    .map(r -> ChatColor.YELLOW + r.toString()).collect(Collectors.joining(ChatColor.GRAY + ", "));
+                    sender.sendMessage(ChatColor.GOLD + "Aquatic trap replacement types: " + aquaticReplacements);
+                    String landReplacements = TrapReplacement.LAND_REPLACEMENTS.stream()
+                    .map(r -> ChatColor.YELLOW + r.toString()).collect(Collectors.joining(ChatColor.GRAY + ", "));
+                    sender.sendMessage(ChatColor.GOLD + "Dry land trap replacement types: " + landReplacements);
                     return true;
                 } else if (args[0].equalsIgnoreCase("type")) {
                     _forcedReplacement = null;
@@ -219,11 +221,9 @@ public class ItsATrap extends JavaPlugin implements Listener {
             replacement = _forcedReplacement;
         } else {
             Biome biome = loc.getBlock().getBiome();
-            if (biome == Biome.OCEAN || biome == Biome.DEEP_OCEAN) {
-                replacement = TrapReplacement.GUARDIAN;
-            } else {
-                replacement = TrapReplacement.VALUES[1 + _random.nextInt(TrapReplacement.VALUES.length - 1)];
-            }
+            ArrayList<TrapReplacement> replacementOptions = AQUATIC_BIOMES.contains(biome) ? TrapReplacement.AQUATIC_REPLACEMENTS
+                                                                                           : TrapReplacement.LAND_REPLACEMENTS;
+            replacement = replacementOptions.get(_random.nextInt(replacementOptions.size()));
         }
         replacement.trapChanged(_location);
         return replacement;
@@ -246,6 +246,17 @@ public class ItsATrap extends JavaPlugin implements Listener {
     }
 
     // ------------------------------------------------------------------------
+    /**
+     * The set of all aquatic biomes, where aquatic trap replacements occur.
+     */
+    protected static final EnumSet<Biome> AQUATIC_BIOMES = EnumSet.of(Biome.FROZEN_RIVER, Biome.RIVER,
+                                                                      Biome.COLD_OCEAN,
+                                                                      Biome.DEEP_OCEAN, Biome.DEEP_COLD_OCEAN,
+                                                                      Biome.DEEP_FROZEN_OCEAN, Biome.DEEP_LUKEWARM_OCEAN,
+                                                                      Biome.DEEP_OCEAN, Biome.DEEP_WARM_OCEAN,
+                                                                      Biome.FROZEN_OCEAN, Biome.LUKEWARM_OCEAN,
+                                                                      Biome.OCEAN, Biome.WARM_OCEAN);
+
     /**
      * Maximum distance (in blocks) plane between spawns such that they are
      * considered to be part of the same trap.
