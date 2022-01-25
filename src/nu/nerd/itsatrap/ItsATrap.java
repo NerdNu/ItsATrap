@@ -23,7 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 // ----------------------------------------------------------------------------
 /**
  * Customised trap horse handling.
- * 
+ *
  * See {@link TrapReplacement} for possible trap replacements.
  */
 public class ItsATrap extends JavaPlugin implements Listener {
@@ -68,10 +68,10 @@ public class ItsATrap extends JavaPlugin implements Listener {
                     return true;
                 } else if (args[0].equalsIgnoreCase("types")) {
                     String aquaticReplacements = TrapReplacement.AQUATIC_REPLACEMENTS.stream()
-                    .map(r -> ChatColor.YELLOW + r.toString()).collect(Collectors.joining(ChatColor.GRAY + ", "));
+                        .map(r -> ChatColor.YELLOW + r.toString()).collect(Collectors.joining(ChatColor.GRAY + ", "));
                     sender.sendMessage(ChatColor.GOLD + "Aquatic trap replacement types: " + aquaticReplacements);
                     String landReplacements = TrapReplacement.LAND_REPLACEMENTS.stream()
-                    .map(r -> ChatColor.YELLOW + r.toString()).collect(Collectors.joining(ChatColor.GRAY + ", "));
+                        .map(r -> ChatColor.YELLOW + r.toString()).collect(Collectors.joining(ChatColor.GRAY + ", "));
                     sender.sendMessage(ChatColor.GOLD + "Dry land trap replacement types: " + landReplacements);
                     return true;
                 } else if (args[0].equalsIgnoreCase("type")) {
@@ -106,17 +106,26 @@ public class ItsATrap extends JavaPlugin implements Listener {
      * block x, y and z as the trigger horse (probably at the exact same
      * floating point coordinates).
      *
-     * A jockey is spawned first (SpawnReason.JOCKEY), and presumably is set as
-     * the rider of the original trigger horse. However, it apparently doesn't
-     * have a vehicle set when it spawns, which makes it very difficult to
-     * distinguish it from a spider jockey (thanks Mojang). If the jockey has no
-     * mount, we will search for a skeletal horse at the jockey coordinates and
-     * assume that it is the mount.
+     * The sequence of spawn events (EntityType because SpawnReason) is:
+     * <ul>
+     * <li>SKELETON_HORSE because LIGHTNING (the trap horse)</li>
+     * <li>Player triggers the trap horse.</li>
+     * <li>SKELETON because TRAP
+     * <li>
+     * <li>Then three repetitions of:</li>
+     * <ul>
+     * <li>SKELETON_HORSE reason JOCKEY</li>
+     * <li>SKELETON reason JOCKEY</li>
+     * </ul>
+     * </ul>
      *
-     * The three subsequent jockeys are each proceeded by their trap horses; the
-     * spawns are skeleton horse (SpawnReason.TRAP) then skeleton
-     * (SpawnReason.Jockey), repeated three times. There seems to be no distance
-     * between the spawn locations, nor any time delay.
+     * Once the trap is triggered, the skeleton horses and their jockeys all
+     * spawn at the same location and in the same tick.
+     *
+     * The first skeleton jockey spawns with reason SpawnReason.TRAP, which
+     * should make it easy enough to distinguish from a spider jocky (thanks,
+     * Mojang!). :) If the jockey has no mount, we will search for a skeletal
+     * horse at the jockey coordinates and assume that it is the mount.
      *
      * Further testing shows that the subsequent spawns don't happen if the
      * spawn of any reinforcement trap horses are cancelled or the mobs are
@@ -126,19 +135,25 @@ public class ItsATrap extends JavaPlugin implements Listener {
      * Therefore, our strategy for replacing the trap will be to cancel/remove
      * all subsequent spawns from Mojang code and simply spawn as many mobs as
      * we need in custom code.
-     *
-     * The initial trigger horse spawns with SpawnReason.LIGHTNING.
      */
     @EventHandler(ignoreCancelled = true)
     public void onCreatureSpawn(CreatureSpawnEvent event) {
         boolean isTestEgg = (CONFIG.DEBUG_ALLOW_SPAWN_EGGS && event.getSpawnReason() == SpawnReason.SPAWNER_EGG);
 
-        if (event.getEntityType() == EntityType.SKELETON &&
-            (event.getSpawnReason() == SpawnReason.JOCKEY || isTestEgg)) {
-            // Note: SpawnReason.JOCKEY also covers behaviours like spider
-            // jockeys and baby zombie chicken jockeys.
+        Location loc = event.getLocation();
+        EntityType entityType = event.getEntityType();
+        SpawnReason reason = event.getSpawnReason();
+
+        // For debugging when Mojang changes the spawn algorithm again.
+        // if (entityType == EntityType.SKELETON_HORSE || (loc.getY() > 63 &&
+        // entityType == EntityType.SKELETON)) {
+        // getLogger().info(entityType + " because " + reason + " at " +
+        // Util.formatLocation(loc));
+        // }
+
+        if (entityType == EntityType.SKELETON &&
+            (reason == SpawnReason.TRAP || isTestEgg)) {
             Entity jockey = event.getEntity();
-            Location loc = jockey.getLocation();
             Entity mount = jockey.getVehicle();
             if (mount == null) {
                 mount = findTriggerHorse(loc);
@@ -158,8 +173,8 @@ public class ItsATrap extends JavaPlugin implements Listener {
                 _replacement.onJockeySpawn(event);
             }
 
-        } else if (event.getEntityType() == EntityType.SKELETON_HORSE) {
-            if (event.getSpawnReason() == SpawnReason.LIGHTNING) {
+        } else if (entityType == EntityType.SKELETON_HORSE) {
+            if (reason == SpawnReason.LIGHTNING) {
                 if (_random.nextDouble() < CONFIG.TRAP_CHANCE) {
                     if (CONFIG.DEBUG_SPAWNS) {
                         getLogger().info("Trap trigger horse spawned at " +
@@ -172,7 +187,7 @@ public class ItsATrap extends JavaPlugin implements Listener {
                                          Util.formatLocation(event.getEntity().getLocation()));
                     }
                 }
-            } else if (event.getSpawnReason() == SpawnReason.TRAP || isTestEgg) {
+            } else if (reason == SpawnReason.JOCKEY) {
                 if (CONFIG.DEBUG_VANILLA_SPAWNS) {
                     getLogger().info("Trap horse spawned at " +
                                      Util.formatLocation(event.getEntity().getLocation()));
@@ -249,14 +264,15 @@ public class ItsATrap extends JavaPlugin implements Listener {
     /**
      * The set of all aquatic biomes, where aquatic trap replacements occur.
      */
-    protected static final EnumSet<Biome> AQUATIC_BIOMES = EnumSet.of(Biome.FROZEN_RIVER, Biome.RIVER,
-                                                                      Biome.COLD_OCEAN,
-                                                                      Biome.DEEP_OCEAN, Biome.DEEP_COLD_OCEAN,
-                                                                      Biome.DEEP_FROZEN_OCEAN, Biome.DEEP_LUKEWARM_OCEAN,
-                                                                      Biome.DEEP_OCEAN, Biome.DEEP_WARM_OCEAN,
-                                                                      Biome.FROZEN_OCEAN, Biome.LUKEWARM_OCEAN,
-                                                                      Biome.OCEAN, Biome.WARM_OCEAN);
-
+    protected static final EnumSet<Biome> AQUATIC_BIOMES = EnumSet.noneOf(Biome.class);
+    static {
+        for (Biome biome : Biome.values()) {
+            if ((biome.name().contains("RIVER") || biome.name().contains("OCEAN")) &&
+                !biome.name().contains("LEGACY")) {
+                AQUATIC_BIOMES.add(biome);
+            }
+        }
+    };
     /**
      * Maximum distance (in blocks) plane between spawns such that they are
      * considered to be part of the same trap.
